@@ -12,9 +12,10 @@ import org.springframework.security.web.SecurityFilterChain;
 public class ProjectSecurityConfig {
 
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-		http.authorizeHttpRequests((authorize) -> authorize
+		http.csrf((csrf) -> csrf.disable())//authorizeHttpRequests보다 앞에 선언되어야 작동함.
+			.authorizeHttpRequests((authorize) -> authorize
 			.requestMatchers("/myAccount","/myBalance","/myLoans","/myCards").authenticated()
-			.requestMatchers("/notices", "contact").permitAll())
+			.requestMatchers("/notices", "/contact", "/register").permitAll())
 			.formLogin(Customizer.withDefaults())
 			.httpBasic(Customizer.withDefaults());
 
@@ -61,5 +62,12 @@ public class ProjectSecurityConfig {
                 .build();
         return new InMemoryUserDetailsManager(admin, user);
 
+    }*/
+
+	/*
+	//Jdbc로 자동으로 User 테이블 생성해서 사용자 db에 생성/업데이트/삭제 가능함 간단한 프로젝트에서 사용.
+	@Bean
+    public UserDetailsService userDetailsService(DataSource dataSource) {
+        return new JdbcUserDetailsManager(dataSource);
     }*/
 }
