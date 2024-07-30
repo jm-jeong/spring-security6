@@ -1,5 +1,7 @@
 package com.ezybytes.springsecurity6.config;
 
+import java.util.Collections;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -8,13 +10,19 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
 public class ProjectSecurityConfig {
 
 	@Bean
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-		http.csrf((csrf) -> csrf.disable())//authorizeHttpRequests보다 앞에 선언되어야 작동함.
+		http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+			.csrf((csrf) -> csrf.disable())//authorizeHttpRequests보다 앞에 선언되어야 작동함.
 			.authorizeHttpRequests((authorize) -> authorize
 			.requestMatchers("/myAccount","/myBalance","/myLoans","/myCards", "/user").authenticated()
 			.requestMatchers( "/notices", "/contact", "/register", "/v3/**", "/swagger-ui/**").permitAll())
@@ -27,6 +35,27 @@ public class ProjectSecurityConfig {
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
+	}
+
+	/*
+	pre-flight: 서버로 바로 요청을 보내는 Simple Request와는 다르게, 지금 보내는 요청이 유효한지를 확인하기 위해 OPTIONS 메서드로 예비 요청을 보내는 것
+	최초 요청 보낼 시 Options 메서드가 허용된 상태에서(아래 조건은 모든 메서드 허용) 예비 요청으로 type이 preflight로 가서 cors 상태를 확인함.
+	preflight 응답 헤더에서 백엔드에 선언된 cors 정책을 확인할 수 있음.
+	* */
+	@Bean
+	CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration config = new CorsConfiguration();
+		config.setAllowCredentials(true);
+		config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
+		config.setAllowedMethods(Collections.singletonList("*"));
+		config.setAllowedHeaders(Collections.singletonList("*"));
+		config.setMaxAge(3600L);
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", config);
+
+
+		return source;
 	}
 
 /*	*//**
