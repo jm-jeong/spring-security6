@@ -6,13 +6,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.ezybytes.springsecurity6.filter.CsrfCookieFilter;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -21,11 +27,22 @@ public class ProjectSecurityConfig {
 
 	@Bean
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-		http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-			.csrf((csrf) -> csrf.disable())//authorizeHttpRequests보다 앞에 선언되어야 작동함.
+
+		CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+		requestHandler.setCsrfRequestAttributeName("_csrf");//원래 이름인데 명시적으로 보여주기 위해서 썼음
+
+		//아래 2줄을 통해서 서로 다른 Origin에서 첫 로그인이 완료되면 항상 JSESSIONID가 생성되고 동일한 JSESSIONID가 UI 앱에 보내지고 UI 앱은 첫 로그인 후에 만들어지는 후속 요청들을 활용할 수 있게 해줌
+		//만약 아래 2줄 선언 안하면 매번 보안된 api 접근할 때마다 Angular 앱에서 자격증명을 입력해야함
+		http.securityContext((securityContext) -> securityContext.requireExplicitSave(false))//spring security 프레임워크에서 SecurityContextHolder안에 있는 인증 정보들을 저장하는 역할을 맡지 않고, 프레임워크들이 대신 수행하게 함 기본설정은 true
+			.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
+			// .csrf((csrf) -> csrf.ignoringRequestMatchers("/contact", "/register"))//authorizeHttpRequests보다 앞에 선언되어야 작동함. csrf 제외해야 하는 데이터를 보내는 메서드인 post put 등의 request
+			.csrf((csrf) -> csrf.csrfTokenRequestHandler(requestHandler).ignoringRequestMatchers( "/register")//_csrf 토큰 심기 위해서 선언
+				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))//쿠키 방식으로 토큰 저장, withHttpOnlyFalse()는 JavaScript에서도 사용하기 위해서
+			.addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)//BasicAuthenticationFilter 이후에 CsrfCookieFilter 실행, 즉 로그인 완료후 CSRF 토큰 생성해서 응답 값에 채움
 			.authorizeHttpRequests((authorize) -> authorize
-			.requestMatchers("/myAccount","/myBalance","/myLoans","/myCards", "/user").authenticated()
-			.requestMatchers( "/notices", "/contact", "/register", "/v3/**", "/swagger-ui/**").permitAll())
+			.requestMatchers("/myAccount","/myBalance","/myLoans","/myCards", "/user","/contact").authenticated()
+			.requestMatchers( "/notices", "/register", "/v3/**", "/swagger-ui/**").permitAll())
 			.formLogin(Customizer.withDefaults())
 			.httpBasic(Customizer.withDefaults());
 
