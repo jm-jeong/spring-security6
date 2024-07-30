@@ -12,11 +12,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class ProjectSecurityConfig {
 
+	@Bean
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 		http.csrf((csrf) -> csrf.disable())//authorizeHttpRequests보다 앞에 선언되어야 작동함.
 			.authorizeHttpRequests((authorize) -> authorize
-			.requestMatchers("/myAccount","/myBalance","/myLoans","/myCards").authenticated()
-			.requestMatchers("/notices", "/contact", "/register").permitAll())
+			.requestMatchers("/myAccount","/myBalance","/myLoans","/myCards", "/user").authenticated()
+			.requestMatchers( "/notices", "/contact", "/register", "/v3/**", "/swagger-ui/**").permitAll())
 			.formLogin(Customizer.withDefaults())
 			.httpBasic(Customizer.withDefaults());
 
