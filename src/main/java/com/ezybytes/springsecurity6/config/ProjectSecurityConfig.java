@@ -62,10 +62,14 @@ public class ProjectSecurityConfig {
 			.addFilterAfter(new CsrfCookieFilter(),
 				BasicAuthenticationFilter.class)//BasicAuthenticationFilter 이후에 CsrfCookieFilter 실행, 즉 로그인 완료후 CSRF 토큰 생성해서 응답 값에 채움
 			.authorizeHttpRequests((authorize) -> authorize
-				.requestMatchers(("/myAccount")).hasAuthority("VIEWACCOUNT")
-				.requestMatchers(("/myLoans")).hasAuthority("VIEWLOANS")
-				.requestMatchers(("/myCards")).hasAuthority("VIEWCARDS")
-				.requestMatchers(("/myBalance")).hasAnyAuthority("VIEWACCOUNT", "VIEWBALANCE")
+				// .requestMatchers(("/myAccount")).hasAuthority("VIEWACCOUNT")
+				// .requestMatchers(("/myLoans")).hasAuthority("VIEWLOANS")
+				// .requestMatchers(("/myCards")).hasAuthority("VIEWCARDS")
+				// .requestMatchers(("/myBalance")).hasAnyAuthority("VIEWACCOUNT", "VIEWBALANCE")
+				.requestMatchers(("/myAccount")).hasRole("USER")
+				.requestMatchers(("/myLoans")).hasRole("USER")
+				.requestMatchers(("/myCards")).hasRole("USER")
+				.requestMatchers(("/myBalance")).hasAnyRole("USER", "ADMIN")
 				.requestMatchers("/user").authenticated()
 				.requestMatchers("/notices", "/register", "/v3/**", "/swagger-ui/**").permitAll())
 			.formLogin(Customizer.withDefaults())
