@@ -4,7 +4,10 @@ import java.util.Collections;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,9 +24,23 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.ezybytes.springsecurity6.filter.CsrfCookieFilter;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Configuration
 public class ProjectSecurityConfig {
+	private final AuthenticationConfiguration authenticationConfiguration;
+	private final EazyBankUsernamePwdAuthenticationProvider eazyBankUsernamePwdAuthenticationProvider;
+
+	/**
+	 * 맞춤 구성한 CustomAuthenticationProvider 구현 연결
+	 */
+	@Bean
+	public AuthenticationManager authenticationManager() throws Exception {
+		ProviderManager providerManager = (ProviderManager) authenticationConfiguration.getAuthenticationManager();
+		providerManager.getProviders().add(this.eazyBankUsernamePwdAuthenticationProvider);
+		return authenticationConfiguration.getAuthenticationManager();
+	}
 
 	@Bean
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -49,10 +66,7 @@ public class ProjectSecurityConfig {
 		return http.build();
 	}
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+
 
 	/*
 	pre-flight: 서버로 바로 요청을 보내는 Simple Request와는 다르게, 지금 보내는 요청이 유효한지를 확인하기 위해 OPTIONS 메서드로 예비 요청을 보내는 것
