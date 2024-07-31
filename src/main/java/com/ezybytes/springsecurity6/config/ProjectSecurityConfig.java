@@ -21,7 +21,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.ezybytes.springsecurity6.filter.AuthoritiesLoggingAfterFilter;
+import com.ezybytes.springsecurity6.filter.AuthoritiesLoggingAtFilter;
 import com.ezybytes.springsecurity6.filter.CsrfCookieFilter;
+import com.ezybytes.springsecurity6.filter.RequestValidationBeforeFilter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -59,8 +62,10 @@ public class ProjectSecurityConfig {
 				.ignoringRequestMatchers("/register")//_csrf 토큰 심기 위해서 선언
 				.csrfTokenRepository(
 					CookieCsrfTokenRepository.withHttpOnlyFalse()))//쿠키 방식으로 토큰 저장, withHttpOnlyFalse()는 JavaScript에서도 사용하기 위해서
-			.addFilterAfter(new CsrfCookieFilter(),
-				BasicAuthenticationFilter.class)//BasicAuthenticationFilter 이후에 CsrfCookieFilter 실행, 즉 로그인 완료후 CSRF 토큰 생성해서 응답 값에 채움
+			.addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)//BasicAuthenticationFilter 이후에 CsrfCookieFilter 실행, 즉 로그인 완료후 CSRF 토큰 생성해서 응답 값에 채움
+			.addFilterBefore(new RequestValidationBeforeFilter(), BasicAuthenticationFilter.class)//커스텀 필터 적용
+			.addFilterAt(new AuthoritiesLoggingAtFilter(), BasicAuthenticationFilter.class)//addFilterAt은 지정한 내부 필터와 같이 실행인데 순서가 보장이 안됨 사용 주의
+			.addFilterAfter(new AuthoritiesLoggingAfterFilter(), BasicAuthenticationFilter.class)
 			.authorizeHttpRequests((authorize) -> authorize
 				// .requestMatchers(("/myAccount")).hasAuthority("VIEWACCOUNT")
 				// .requestMatchers(("/myLoans")).hasAuthority("VIEWLOANS")
