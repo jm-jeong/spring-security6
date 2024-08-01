@@ -43,7 +43,7 @@ public class ProjectSecurityConfig {
 
 		http.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-			// .csrf((csrf) -> csrf.ignoringRequestMatchers("/contact", "/register"))//authorizeHttpRequests보다 앞에 선언되어야 작동함. csrf 제외해야 하는 데이터를 보내는 메서드인 post put 등의 request
+			.csrf((csrf) -> csrf.ignoringRequestMatchers("/contact", "/register"))//authorizeHttpRequests보다 앞에 선언되어야 작동함. csrf 제외해야 하는 데이터를 보내는 메서드인 post put 등의 request
 			.csrf((csrf) -> csrf.csrfTokenRequestHandler(requestHandler)
 				.ignoringRequestMatchers("/register")//_csrf 토큰 심기 위해서 선언
 				.csrfTokenRepository(
@@ -64,7 +64,7 @@ public class ProjectSecurityConfig {
 				.requestMatchers(("/myCards")).hasRole("USER")
 				.requestMatchers(("/myBalance")).hasAnyRole("USER", "ADMIN")
 				.requestMatchers("/user").authenticated()
-				.requestMatchers("/notices", "/register", "/v3/**", "/swagger-ui/**").permitAll())
+				.requestMatchers("/notices", "/contact", "/register", "/v3/**", "/swagger-ui/**").permitAll())
 			.formLogin(Customizer.withDefaults())
 			.httpBasic(Customizer.withDefaults());
 
