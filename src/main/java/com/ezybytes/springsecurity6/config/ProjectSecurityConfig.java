@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
@@ -24,26 +25,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.ezybytes.springsecurity6.filter.AuthoritiesLoggingAfterFilter;
 import com.ezybytes.springsecurity6.filter.AuthoritiesLoggingAtFilter;
 import com.ezybytes.springsecurity6.filter.CsrfCookieFilter;
+import com.ezybytes.springsecurity6.filter.JWTTokenGeneratorFilter;
+import com.ezybytes.springsecurity6.filter.JWTTokenValidatorFilter;
 import com.ezybytes.springsecurity6.filter.RequestValidationBeforeFilter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 @Configuration
 public class ProjectSecurityConfig {
-	private final AuthenticationConfiguration authenticationConfiguration;
-	private final EazyBankUsernamePwdAuthenticationProvider eazyBankUsernamePwdAuthenticationProvider;
-
-	/**
-	 * 맞춤 구성한 CustomAuthenticationProvider 구현 연결
-	 */
-	@Bean
-	public AuthenticationManager authenticationManager() throws Exception {
-		ProviderManager providerManager = (ProviderManager)authenticationConfiguration.getAuthenticationManager();
-		providerManager.getProviders().add(this.eazyBankUsernamePwdAuthenticationProvider);
-		return authenticationConfiguration.getAuthenticationManager();
-	}
 
 	@Bean
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -51,8 +41,6 @@ public class ProjectSecurityConfig {
 		CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
 		requestHandler.setCsrfRequestAttributeName("_csrf");//원래 이름인데 명시적으로 보여주기 위해서 썼음
 
-		//아래 2줄을 통해서 서로 다른 Origin에서 첫 로그인이 완료되면 항상 JSESSIONID가 생성되고 동일한 JSESSIONID가 UI 앱에 보내지고 UI 앱은 첫 로그인 후에 만들어지는 후속 요청들을 활용할 수 있게 해줌
-		//만약 아래 2줄 선언 안하면 매번 보안된 api 접근할 때마다 Angular 앱에서 자격증명을 입력해야함
 		http.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 			// .csrf((csrf) -> csrf.ignoringRequestMatchers("/contact", "/register"))//authorizeHttpRequests보다 앞에 선언되어야 작동함. csrf 제외해야 하는 데이터를 보내는 메서드인 post put 등의 request
@@ -64,6 +52,8 @@ public class ProjectSecurityConfig {
 			.addFilterBefore(new RequestValidationBeforeFilter(), BasicAuthenticationFilter.class)//커스텀 필터 적용
 			.addFilterAt(new AuthoritiesLoggingAtFilter(), BasicAuthenticationFilter.class)//addFilterAt은 지정한 내부 필터와 같이 실행인데 순서가 보장이 안됨 사용 주의
 			.addFilterAfter(new AuthoritiesLoggingAfterFilter(), BasicAuthenticationFilter.class)
+			.addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)//user 검증 후에 JWT Token 생성
+			.addFilterBefore(new JWTTokenValidatorFilter(), BasicAuthenticationFilter.class)//user 검증 전에 JWT Token 유효성 검사
 			.authorizeHttpRequests((authorize) -> authorize
 				// .requestMatchers(("/myAccount")).hasAuthority("VIEWACCOUNT")
 				// .requestMatchers(("/myLoans")).hasAuthority("VIEWLOANS")
