@@ -60,7 +60,7 @@ public class ProjectSecurityConfig {
 				// .requestMatchers(("/myCards")).hasAuthority("VIEWCARDS")
 				// .requestMatchers(("/myBalance")).hasAnyAuthority("VIEWACCOUNT", "VIEWBALANCE")
 				.requestMatchers(("/myAccount")).hasRole("USER")
-				.requestMatchers(("/myLoans")).hasRole("USER")
+				.requestMatchers(("/myLoans")).authenticated()// @PreAuthorize 사용위해 hasRole() 삭제
 				.requestMatchers(("/myCards")).hasRole("USER")
 				.requestMatchers(("/myBalance")).hasAnyRole("USER", "ADMIN")
 				.requestMatchers("/user").authenticated()
