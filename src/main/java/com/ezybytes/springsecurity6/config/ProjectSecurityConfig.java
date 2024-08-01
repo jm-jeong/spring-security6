@@ -53,9 +53,7 @@ public class ProjectSecurityConfig {
 
 		//아래 2줄을 통해서 서로 다른 Origin에서 첫 로그인이 완료되면 항상 JSESSIONID가 생성되고 동일한 JSESSIONID가 UI 앱에 보내지고 UI 앱은 첫 로그인 후에 만들어지는 후속 요청들을 활용할 수 있게 해줌
 		//만약 아래 2줄 선언 안하면 매번 보안된 api 접근할 때마다 Angular 앱에서 자격증명을 입력해야함
-		http.securityContext((securityContext) -> securityContext.requireExplicitSave(
-				false))//spring security 프레임워크에서 SecurityContextHolder안에 있는 인증 정보들을 저장하는 역할을 맡지 않고, 프레임워크들이 대신 수행하게 함 기본설정은 true
-			.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+		http.sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 			// .csrf((csrf) -> csrf.ignoringRequestMatchers("/contact", "/register"))//authorizeHttpRequests보다 앞에 선언되어야 작동함. csrf 제외해야 하는 데이터를 보내는 메서드인 post put 등의 request
 			.csrf((csrf) -> csrf.csrfTokenRequestHandler(requestHandler)
@@ -96,6 +94,7 @@ public class ProjectSecurityConfig {
 		config.setAllowedMethods(Collections.singletonList("*"));
 		config.setAllowedHeaders(Collections.singletonList("*"));
 		config.setMaxAge(3600L);
+		config.setExposedHeaders(Collections.singletonList("Authorization"));//JWT Token을 보내기 위해 받을 앱에 헤더 정보를 알려주는 것(bearer 사용시에는 선언 안했는데 이유 모르겠음)
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", config);
