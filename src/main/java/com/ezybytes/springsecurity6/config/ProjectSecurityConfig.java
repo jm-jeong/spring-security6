@@ -49,11 +49,11 @@ public class ProjectSecurityConfig {
 				.csrfTokenRepository(
 					CookieCsrfTokenRepository.withHttpOnlyFalse()))//쿠키 방식으로 토큰 저장, withHttpOnlyFalse()는 JavaScript에서도 사용하기 위해서
 			.addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)//BasicAuthenticationFilter 이후에 CsrfCookieFilter 실행, 즉 로그인 완료후 CSRF 토큰 생성해서 응답 값에 채움
-			.addFilterBefore(new RequestValidationBeforeFilter(), BasicAuthenticationFilter.class)//커스텀 필터 적용
-			.addFilterAt(new AuthoritiesLoggingAtFilter(), BasicAuthenticationFilter.class)//addFilterAt은 지정한 내부 필터와 같이 실행인데 순서가 보장이 안됨 사용 주의
-			.addFilterAfter(new AuthoritiesLoggingAfterFilter(), BasicAuthenticationFilter.class)
-			.addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)//user 검증 후에 JWT Token 생성
-			.addFilterBefore(new JWTTokenValidatorFilter(), BasicAuthenticationFilter.class)//user 검증 전에 JWT Token 유효성 검사
+			// .addFilterBefore(new RequestValidationBeforeFilter(), BasicAuthenticationFilter.class)//커스텀 필터 적용
+			// .addFilterAt(new AuthoritiesLoggingAtFilter(), BasicAuthenticationFilter.class)//addFilterAt은 지정한 내부 필터와 같이 실행인데 순서가 보장이 안됨 사용 주의
+			// .addFilterAfter(new AuthoritiesLoggingAfterFilter(), BasicAuthenticationFilter.class)
+			// .addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)//user 검증 후에 JWT Token 생성
+			// .addFilterBefore(new JWTTokenValidatorFilter(), BasicAuthenticationFilter.class)//user 검증 전에 JWT Token 유효성 검사
 			.authorizeHttpRequests((authorize) -> authorize
 				// .requestMatchers(("/myAccount")).hasAuthority("VIEWACCOUNT")
 				// .requestMatchers(("/myLoans")).hasAuthority("VIEWLOANS")

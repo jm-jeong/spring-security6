@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 * AuthenticationProvider 사용하려면 UserDetails 삭제해야 함. 영향 있을 수 있음.
 * 사용자 인증에 대해서 사용자가 인증 조건이 특정 나라 또는 19세 이상 등 조건을 넣어야 하는 경우 AuthenticationProvider를 구현해서 사용할 수 있음*/
 @RequiredArgsConstructor
-@Component
+// @Component
 public class EazyBankUsernamePwdAuthenticationProvider implements AuthenticationProvider {
 	private final CustomerRepository customerRepository;
 	private final PasswordEncoder passwordEncoder;
