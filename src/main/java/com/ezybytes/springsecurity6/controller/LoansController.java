@@ -8,7 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import com.ezybytes.springsecurity6.model.Customer;
 import com.ezybytes.springsecurity6.model.Loans;
+import com.ezybytes.springsecurity6.repository.CustomerRepository;
 import com.ezybytes.springsecurity6.repository.LoanRepository;
 
 @RestController
@@ -17,15 +19,19 @@ public class LoansController {
     @Autowired
     private LoanRepository loanRepository;
 
-    @PostAuthorize("hasAnyRole('USER')")
+    @Autowired
+    private CustomerRepository customerRepository;
+
     @GetMapping("/myLoans")
-    public List<Loans> getLoanDetails(@RequestParam int id) {
-        List<Loans> loans = loanRepository.findByCustomerIdOrderByStartDtDesc(id);
-        if (loans != null ) {
-            return loans;
-        }else {
-            return null;
+    public List<Loans> getLoanDetails(@RequestParam String email) {
+        List<Customer> customers = customerRepository.findByEmail(email);
+        if (customers != null && !customers.isEmpty()) {
+            List<Loans> loans = loanRepository.findByCustomerIdOrderByStartDtDesc(customers.get(0).getId());
+            if (loans != null ) {
+                return loans;
+            }
         }
+        return null;
     }
 
 }

@@ -1,3 +1,4 @@
+
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/eazybank
@@ -8,6 +9,16 @@ spring:
     properties:
       hibernate:
         format_sql: truelevel.org.springframework.security.web.SecurityFilterChain=Debug
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8080/realms/eazybankdev/protocol/openid-connect/certs
+
 logging:
   level:
     org.springframework.security.web.SecurityFilterChain : debug
+
+
+server:
+  port: 8180
